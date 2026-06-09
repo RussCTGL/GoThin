@@ -33,11 +33,20 @@ export default async function RootLayout({
             {isAdminUser && <a href="/admin">Admin</a>}
             {showAuth &&
               (user ? (
-                <form action="/auth/signout" method="post" className="inline">
-                  <button type="submit" className="linkbtn">
-                    Sign out
-                  </button>
-                </form>
+                <>
+                  <span
+                    className="muted"
+                    style={{ fontSize: "0.85rem" }}
+                    title={user.email ?? ""}
+                  >
+                    {user.email}
+                  </span>
+                  <form action="/auth/signout" method="post" className="inline">
+                    <button type="submit" className="linkbtn">
+                      Sign out
+                    </button>
+                  </form>
+                </>
               ) : (
                 <a href="/login">Login</a>
               ))}
