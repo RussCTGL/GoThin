@@ -39,7 +39,7 @@ No meaningful free tier for production LLM use. Both Claude and OpenAI give a sm
 Each experiment has a **baseline → intervention → measured result** shape. The
 measured numbers go straight into the project README's "Efficiency" section.
 
-### 2.1 Model routing
+### 2.1 Model routing — ✅ Implemented
 Route by task difficulty instead of using one model for everything.
 
 - **Haiku** → meal text parsing (high volume, structured, easy).
@@ -48,7 +48,7 @@ Route by task difficulty instead of using one model for everything.
 
 **Measure:** cost/quality vs. an "everything on Opus" baseline. Expected ~5–10× cost cut on the high-volume parsing path.
 
-### 2.2 Prompt caching
+### 2.2 Prompt caching — ✅ Implemented (measured)
 The coach prompt has a **stable prefix** (user profile + calorie/protein targets + recent logs) and a **volatile suffix** (today's new question). Cache the prefix.
 
 - Put `cache_control` at the end of the stable prefix; keep volatile content after it.
@@ -68,27 +68,27 @@ The coach prompt has a **stable prefix** (user profile + calorie/protein targets
   `cacheRead` (1,037 → 2,188). **Cost-per-message held flat at ~$0.0060** instead
   of climbing — the input side cost ~7× less than uncached by turn 10.
 
-### 2.3 Batch API for daily summaries
+### 2.3 Batch API for daily summaries — ⏳ Planned (needs the daily-summary feature)
 The daily coach summary is **not** latency-sensitive — it can run overnight.
 
 - Generate all users' daily summaries in one batch job → **50% off**.
 - **Measure:** cost of batched nightly run vs. on-demand synchronous calls.
 - Story: "I matched the API surface to the workload shape."
 
-### 2.4 Structured outputs (JSON schema)
+### 2.4 Structured outputs (JSON schema) — ✅ Implemented
 Constrain the meal-parser's output to a JSON schema so it's always valid and parseable.
 
 - Eliminates reparse/retry waste; guarantees the `{calories, protein_g, carbs_g, fat_g, confidence}` shape.
 - **Measure:** retry/parse-failure rate before vs. after.
 
-### 2.5 Token counting + cost dashboard
+### 2.5 Token counting + cost dashboard — ✅ Implemented (per-account + admin view)
 Log the `usage` block on **every** API call from day one.
 
 - Track cost-per-user-per-day; watch it trend down as 2.1–2.4 are applied.
 - Use the token-counting endpoint (not `tiktoken`, which is OpenAI's tokenizer and undercounts Claude) to estimate before sending.
 - **This dashboard is the central research deliverable** — the visible proof of the efficiency work.
 
-### 2.6 Vision cost control (food photos)
+### 2.6 Vision cost control (food photos) — ⏳ Planned (with photo meal logging)
 Food-photo estimation is the most expensive per-call path.
 
 - Downsample images client-side before upload.
@@ -100,7 +100,7 @@ Food-photo estimation is the most expensive per-call path.
 
 | Decision        | Choice                              | Why                                                        |
 |-----------------|-------------------------------------|------------------------------------------------------------|
-| Frontend        | Next.js + TS + Tailwind + shadcn/ui | Per the layout doc; good for streaming AI responses        |
+| Frontend        | Next.js + TS + **plain CSS** (Tailwind/shadcn deferred) | Plain CSS kept the build bulletproof; Recharts for charts  |
 | Backend (MVP)   | Next.js API routes                  | Simplest path; no separate service to host                 |
 | DB + Auth + Storage | Supabase                        | All-in-one, free, least glue code                          |
 | AI provider     | Claude, with **model routing**      | Strong JSON/instruction following; routing is the cost lever|
@@ -153,14 +153,20 @@ Module map: `client.ts` (shared client + routing + fallback), `schemas.ts`
 
 **First measured result (2026-06-09):** `parseMeal` verified end-to-end against
 the live API on `claude-haiku-4-5` — one meal parse = 404 in / 59 out tokens =
-**~$0.0007 (0.07¢)**. This is the routing baseline; caching and batching numbers
-get added as those land. (SDK 0.102.0; runnable via `npm run smoke`.)
+**~$0.0007 (0.07¢)**. This is the routing baseline; the caching result is in §2.2
+(batching still pending). (SDK 0.102.0; runnable via `npm run smoke`.)
 
 ---
 
-## 6. Open Decisions
+## 6. Decisions — resolved
 
-- [ ] Confirm Supabase vs. Neon+NextAuth+R2 for the free stack.
-- [ ] Confirm Claude as the AI provider (vs. OpenAI / a thin abstraction layer).
-- [ ] Wire `recordUsage` to a Supabase `ai_usage` table (currently logs to stdout).
-- [ ] Scaffold the Next.js app shell (Week 1) around the existing `lib/ai/` layer.
+- [x] **Free stack:** Supabase (Postgres + Auth) — chosen over Neon+NextAuth+R2.
+- [x] **AI provider:** Claude, with model routing (Haiku/Sonnet).
+- [x] **`recordUsage` → Supabase `ai_usage`** — wired, now per-account with an admin view.
+- [x] **Next.js app shell** — built around `lib/ai/`; deployed to Vercel.
+- [x] **Security:** RLS enabled on all tables; app uses the service-role key
+  (bypasses RLS); the public anon key cannot read tables.
+
+### Still planned (efficiency-relevant)
+- [ ] **Batch API** for the daily-summary feature (§2.3) — once that feature exists.
+- [ ] **Vision cost control** for photo meal logging (§2.6) — once photos ship.
