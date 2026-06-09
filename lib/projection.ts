@@ -7,8 +7,13 @@ export interface Projection {
 
 /**
  * Linear-regression trend over the user's weigh-ins, and a projected date to
- * reach the goal weight. Returns nulls when there isn't enough data or the
- * trend isn't moving toward the goal (we don't fabricate a date).
+ * reach the goal weight.
+ *
+ * Entries are first collapsed to ONE point per calendar day (their average) so
+ * that several weigh-ins minutes apart can't produce an absurd per-day slope
+ * (e.g. a 2 kg change over 5 minutes extrapolating to +200 kg/week). A real
+ * trend needs at least two distinct days; otherwise we return nulls rather than
+ * fabricate one.
  */
 export function projectGoalDate(
   weights: WeightEntry[],
@@ -16,13 +21,25 @@ export function projectGoalDate(
 ): Projection {
   if (weights.length < 2) return { trendKgPerWeek: null, goalDate: null };
 
-  const pts = [...weights]
-    .sort((a, b) => Date.parse(a.loggedAt) - Date.parse(b.loggedAt))
-    .map((w) => ({ t: Date.parse(w.loggedAt), y: w.weightKg }));
+  // Average per calendar day (UTC date key), one point per day.
+  const byDay = new Map<string, { sum: number; n: number; t: number }>();
+  for (const w of weights) {
+    const key = new Date(w.loggedAt).toISOString().slice(0, 10); // YYYY-MM-DD
+    const t = Date.parse(`${key}T00:00:00Z`);
+    const e = byDay.get(key) ?? { sum: 0, n: 0, t };
+    e.sum += w.weightKg;
+    e.n += 1;
+    byDay.set(key, e);
+  }
+  const days = [...byDay.values()]
+    .map((e) => ({ t: e.t, y: e.sum / e.n }))
+    .sort((a, b) => a.t - b.t);
 
-  const t0 = pts[0].t;
-  const xs = pts.map((p) => (p.t - t0) / 86_400_000); // days since first entry
-  const ys = pts.map((p) => p.y);
+  if (days.length < 2) return { trendKgPerWeek: null, goalDate: null };
+
+  const t0 = days[0].t;
+  const xs = days.map((p) => (p.t - t0) / 86_400_000); // whole days, 0,1,2,…
+  const ys = days.map((p) => p.y);
   const n = xs.length;
 
   const sx = xs.reduce((a, b) => a + b, 0);
@@ -31,7 +48,7 @@ export function projectGoalDate(
   const sxy = xs.reduce((a, x, i) => a + x * ys[i], 0);
 
   const denom = n * sxx - sx * sx;
-  if (denom === 0) return { trendKgPerWeek: null, goalDate: null }; // all same day
+  if (denom === 0) return { trendKgPerWeek: null, goalDate: null };
 
   const slope = (n * sxy - sx * sy) / denom; // kg per day
   const intercept = (sy - slope * sx) / n;

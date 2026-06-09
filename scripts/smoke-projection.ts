@@ -26,3 +26,12 @@ console.log("single entry:", projectGoalDate([entry(0, 106)], 100));
 // Trend going the wrong way (gaining) — no goal date.
 const gaining = [entry(10, 100), entry(0, 104)];
 console.log("gaining, goal 95:", projectGoalDate(gaining, 95));
+
+// The reported bug: 3 entries on the SAME day, minutes apart. Must NOT produce
+// an absurd per-week slope — only one distinct day, so no trend.
+const sameDay = [
+  { id: "1", userId: "t", weightKg: 105, loggedAt: "2026-06-09T10:00:00Z" },
+  { id: "2", userId: "t", weightKg: 107, loggedAt: "2026-06-09T10:05:00Z" },
+  { id: "3", userId: "t", weightKg: 107, loggedAt: "2026-06-09T10:10:00Z" },
+];
+console.log("3 entries same day (expect null trend):", projectGoalDate(sameDay, 100));
