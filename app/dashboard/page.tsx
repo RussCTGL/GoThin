@@ -15,7 +15,7 @@ export default async function Dashboard() {
   const userId = await getUserId();
   const [weights, usage, ctx] = await Promise.all([
     db.listWeights(userId),
-    db.listUsage(20),
+    db.listUsage(userId, 20),
     buildCoachContext(userId),
   ]);
 

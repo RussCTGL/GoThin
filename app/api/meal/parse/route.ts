@@ -1,4 +1,5 @@
 import { parseMeal } from "@/lib/ai/parseMeal";
+import { getUserId } from "@/lib/auth/user";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -11,6 +12,7 @@ export async function POST(req: Request) {
       { status: 400 },
     );
   }
-  const result = await parseMeal(text);
+  const userId = await getUserId();
+  const result = await parseMeal(text, userId);
   return Response.json(result);
 }

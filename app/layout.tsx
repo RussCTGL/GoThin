@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
-import { authEnabled, getUser } from "@/lib/auth/user";
+import { adminEmails, authEnabled, getUser } from "@/lib/auth/user";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -15,6 +15,8 @@ export default async function RootLayout({
 }) {
   const showAuth = authEnabled();
   const user = showAuth ? await getUser() : null;
+  const isAdminUser =
+    !!user?.email && adminEmails().includes(user.email.toLowerCase());
 
   return (
     <html lang="en">
@@ -28,6 +30,7 @@ export default async function RootLayout({
             <a href="/coach">Coach</a>
             <a href="/dashboard">Dashboard</a>
             <a href="/profile">Profile</a>
+            {isAdminUser && <a href="/admin">Admin</a>}
             {showAuth &&
               (user ? (
                 <form action="/auth/signout" method="post" className="inline">

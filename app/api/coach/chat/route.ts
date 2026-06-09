@@ -54,6 +54,7 @@ export async function POST(req: Request) {
       try {
         const final = await ai.finalMessage();
         recordUsage("coach.chat", final.model, final.usage, {
+          userId,
           traceId,
           latencyMs: Math.round(performance.now() - t0),
           ttftMs,

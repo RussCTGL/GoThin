@@ -51,6 +51,7 @@ export interface CoachSessionSummary {
 
 export interface UsageRow {
   id: string;
+  userId: string;
   feature: string;
   model: string;
   traceId: string;
@@ -84,5 +85,6 @@ export interface Store {
   listCoachSessions(userId: string, limit?: number): Promise<CoachSessionSummary[]>; // newest first
 
   addUsage(u: Omit<UsageRow, "id">): Promise<void>;
-  listUsage(limit?: number): Promise<UsageRow[]>; // newest first
+  listUsage(userId: string, limit?: number): Promise<UsageRow[]>; // newest first
+  listAllUsage(limit?: number): Promise<UsageRow[]>; // newest first, all users (admin)
 }

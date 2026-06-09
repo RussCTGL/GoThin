@@ -11,7 +11,7 @@ if (!process.env.ANTHROPIC_API_KEY) {
 const sample = "Breakfast: 2 eggs, 2 slices of toast, black coffee";
 console.log("Input:", sample);
 
-const result = await parseMeal(sample);
+const result = await parseMeal(sample, "smoke-user");
 console.log("Result:", JSON.stringify(result, null, 2));
 
 if (!result.ok) {

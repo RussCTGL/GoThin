@@ -2,7 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 // Pages that require a signed-in user when auth is enabled.
-const PROTECTED = ["/dashboard", "/coach", "/meal", "/profile"];
+const PROTECTED = ["/dashboard", "/coach", "/meal", "/profile", "/admin"];
 
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({ request });

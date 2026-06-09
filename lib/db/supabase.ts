@@ -1,6 +1,13 @@
 import { createClient } from "@supabase/supabase-js";
 import { summarizeSessions } from "./group";
-import type { CoachMessage, CoachRole, Meal, Profile, Store } from "./types";
+import type {
+  CoachMessage,
+  CoachRole,
+  Meal,
+  Profile,
+  Store,
+  UsageRow,
+} from "./types";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 function mapCoachMessage(d: any): CoachMessage {
@@ -11,6 +18,24 @@ function mapCoachMessage(d: any): CoachMessage {
     role: d.role as CoachRole,
     content: d.content,
     createdAt: d.created_at,
+  };
+}
+
+function mapUsage(d: any): UsageRow {
+  return {
+    id: d.id,
+    userId: d.user_id,
+    feature: d.feature,
+    model: d.model,
+    traceId: d.trace_id,
+    inputTokens: d.input_tokens,
+    outputTokens: d.output_tokens,
+    cacheReadTokens: d.cache_read_tokens,
+    cacheWriteTokens: d.cache_write_tokens,
+    latencyMs: d.latency_ms,
+    ttftMs: d.ttft_ms ?? undefined,
+    costUsd: Number(d.cost_usd),
+    at: d.at,
   };
 }
 
@@ -183,6 +208,7 @@ export function createSupabaseStore(): Store {
 
     async addUsage(u) {
       const { error } = await sb.from("ai_usage").insert({
+        user_id: u.userId,
         feature: u.feature,
         model: u.model,
         trace_id: u.traceId,
@@ -198,27 +224,25 @@ export function createSupabaseStore(): Store {
       if (error) throw error;
     },
 
-    async listUsage(limit = 50) {
+    async listUsage(userId, limit = 50) {
+      const { data, error } = await sb
+        .from("ai_usage")
+        .select("*")
+        .eq("user_id", userId)
+        .order("at", { ascending: false })
+        .limit(limit);
+      if (error) throw error;
+      return (data ?? []).map(mapUsage);
+    },
+
+    async listAllUsage(limit = 200) {
       const { data, error } = await sb
         .from("ai_usage")
         .select("*")
         .order("at", { ascending: false })
         .limit(limit);
       if (error) throw error;
-      return (data ?? []).map((d) => ({
-        id: d.id,
-        feature: d.feature,
-        model: d.model,
-        traceId: d.trace_id,
-        inputTokens: d.input_tokens,
-        outputTokens: d.output_tokens,
-        cacheReadTokens: d.cache_read_tokens,
-        cacheWriteTokens: d.cache_write_tokens,
-        latencyMs: d.latency_ms,
-        ttftMs: d.ttft_ms ?? undefined,
-        costUsd: Number(d.cost_usd),
-        at: d.at,
-      }));
+      return (data ?? []).map(mapUsage);
     },
   };
 }

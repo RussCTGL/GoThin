@@ -36,6 +36,7 @@ stream.on("text", (delta) => {
 
 const final = await stream.finalMessage();
 recordUsage("coach.chat", final.model, final.usage, {
+  userId: "smoke-user",
   traceId,
   latencyMs: Math.round(performance.now() - t0),
   ttftMs,

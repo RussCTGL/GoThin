@@ -9,6 +9,21 @@ export function authEnabled(): boolean {
   );
 }
 
+/** Admin emails from ADMIN_EMAILS (comma-separated), lowercased. */
+export function adminEmails(): string[] {
+  return (process.env.ADMIN_EMAILS ?? "")
+    .split(",")
+    .map((s) => s.trim().toLowerCase())
+    .filter(Boolean);
+}
+
+/** Whether the current signed-in user is an admin (by verified session email). */
+export async function isAdmin(): Promise<boolean> {
+  const user = await getUser();
+  const email = user?.email?.toLowerCase();
+  return !!email && adminEmails().includes(email);
+}
+
 /** The current Supabase user, or null (not signed in / auth disabled). */
 export async function getUser() {
   if (!authEnabled()) return null;

@@ -9,6 +9,7 @@ import { db } from "../db";
  * all keyed by a correlation id so a whole user interaction can be reassembled.
  */
 export interface UsageRecord {
+  userId: string;
   feature: string;
   model: string;
   traceId: string; // correlation id threading all calls for one interaction
@@ -46,6 +47,7 @@ export function estimateCostUsd(rec: UsageRecord): number {
 }
 
 export interface UsageMeta {
+  userId: string;
   traceId: string;
   latencyMs: number;
   ttftMs?: number;
@@ -62,6 +64,7 @@ export function recordUsage(
   meta: UsageMeta,
 ): UsageRecord {
   const rec: UsageRecord = {
+    userId: meta.userId,
     feature,
     model,
     traceId: meta.traceId,

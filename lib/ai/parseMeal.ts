@@ -31,6 +31,7 @@ const SYSTEM =
  */
 export async function parseMeal(
   text: string,
+  userId: string,
   traceId: string = newTraceId(),
 ): Promise<ParseResult> {
   for (const model of withFallback(MODELS.parse)) {
@@ -47,6 +48,7 @@ export async function parseMeal(
       });
 
       recordUsage("meal.parse", model, res.usage, {
+        userId,
         traceId,
         latencyMs: Math.round(performance.now() - t0),
       });

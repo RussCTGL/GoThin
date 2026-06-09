@@ -18,6 +18,7 @@ create index if not exists weight_entries_user_logged
 
 create table if not exists ai_usage (
   id                  uuid primary key default gen_random_uuid(),
+  user_id             text,
   feature             text not null,
   model               text not null,
   trace_id            uuid not null,
@@ -32,6 +33,9 @@ create table if not exists ai_usage (
 );
 create index if not exists ai_usage_at on ai_usage (at desc);
 create index if not exists ai_usage_trace on ai_usage (trace_id);
+create index if not exists ai_usage_user on ai_usage (user_id, at desc);
+-- For projects that created `ai_usage` before the user_id column existed:
+alter table ai_usage add column if not exists user_id text;
 
 create table if not exists meals (
   id          uuid primary key default gen_random_uuid(),

@@ -80,7 +80,13 @@ export const memoryStore: Store = {
   async addUsage(u) {
     usage.push({ ...u, id: randomUUID() });
   },
-  async listUsage(limit = 50) {
+  async listUsage(userId, limit = 50) {
+    return [...usage]
+      .filter((u) => u.userId === userId)
+      .sort((a, b) => b.at.localeCompare(a.at))
+      .slice(0, limit);
+  },
+  async listAllUsage(limit = 200) {
     return [...usage]
       .sort((a, b) => b.at.localeCompare(a.at))
       .slice(0, limit);
