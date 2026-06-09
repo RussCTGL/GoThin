@@ -5,6 +5,7 @@ import { projectGoalDate } from "@/lib/projection";
 import WeightForm from "./weight-form";
 import WeightChart from "./weight-chart";
 import MidnightRefresher from "./midnight-refresher";
+import LocalTime from "./local-time";
 
 export const dynamic = "force-dynamic";
 
@@ -26,16 +27,11 @@ export default async function Dashboard() {
 
   // Trend + goal-date projection from the weigh-ins.
   const { trendKgPerWeek, goalDate } = projectGoalDate(weights, ctx.goalWeightKg);
-  // Chart wants oldest → newest.
+  // Chart wants oldest → newest. Pass raw ISO; the (client) chart formats the
+  // date labels in the viewer's timezone.
   const chartData = [...weights]
     .sort((a, b) => Date.parse(a.loggedAt) - Date.parse(b.loggedAt))
-    .map((w) => ({
-      date: new Date(w.loggedAt).toLocaleDateString(undefined, {
-        month: "numeric",
-        day: "numeric",
-      }),
-      weight: w.weightKg,
-    }));
+    .map((w) => ({ iso: w.loggedAt, weight: w.weightKg }));
 
   const totalCost = usage.reduce((s, u) => s + u.costUsd, 0);
   const ttfts = usage.filter((u) => u.ttftMs != null).map((u) => u.ttftMs!);
@@ -109,7 +105,7 @@ export default async function Dashboard() {
               <li key={w.id}>
                 <span>{w.weightKg} kg</span>
                 <span className="muted">
-                  {new Date(w.loggedAt).toLocaleString()}
+                  <LocalTime iso={w.loggedAt} />
                 </span>
               </li>
             ))}
