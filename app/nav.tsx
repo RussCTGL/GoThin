@@ -31,7 +31,7 @@ export default function SiteNav({
 
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-bg/80 backdrop-blur-xl">
-      <div className="mx-auto flex h-16 w-full max-w-5xl items-center justify-between px-5">
+      <div className="flex h-16 w-full items-center justify-between px-5 md:px-10 lg:px-16">
         <Link href="/" className="flex items-center gap-2" onClick={() => setOpen(false)}>
           <span className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-brand-400 to-emerald text-[#06210a] shadow-[0_8px_20px_-8px_rgba(132,204,22,0.8)]">
             <Activity size={18} strokeWidth={2.75} />

@@ -41,7 +41,7 @@ export default async function RootLayout({
           isAdmin={isAdminUser}
           email={user?.email ?? null}
         />
-        <main className="mx-auto w-full max-w-5xl px-5 pb-24 pt-8 md:pt-10">
+        <main className="w-full px-5 pb-24 pt-8 md:px-10 md:pt-10 lg:px-16">
           {children}
         </main>
       </body>
