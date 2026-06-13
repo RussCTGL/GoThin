@@ -136,6 +136,16 @@ export function createSupabaseStore(): Store {
       return (data ?? []).map(mapMeal);
     },
 
+    async deleteMeal(userId, id) {
+      // Scope the delete to the owner so one user can't remove another's meal.
+      const { error } = await sb
+        .from("meals")
+        .delete()
+        .eq("id", id)
+        .eq("user_id", userId);
+      if (error) throw error;
+    },
+
     async getProfile(userId) {
       const { data, error } = await sb
         .from("profiles")

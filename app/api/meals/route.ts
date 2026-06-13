@@ -39,3 +39,13 @@ export async function POST(req: Request) {
   });
   return Response.json({ meal });
 }
+
+/** Undo a just-logged meal: DELETE /api/meals?id=<mealId>. */
+export async function DELETE(req: Request) {
+  const id = new URL(req.url).searchParams.get("id");
+  if (!id) return Response.json({ error: "missing id" }, { status: 400 });
+
+  const userId = await getUserId();
+  await db.deleteMeal(userId, id);
+  return Response.json({ ok: true });
+}

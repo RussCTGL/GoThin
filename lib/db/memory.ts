@@ -51,6 +51,10 @@ export const memoryStore: Store = {
       .sort((a, b) => b.eatenAt.localeCompare(a.eatenAt))
       .slice(0, limit);
   },
+  async deleteMeal(userId, id) {
+    const i = meals.findIndex((m) => m.id === id && m.userId === userId);
+    if (i !== -1) meals.splice(i, 1);
+  },
 
   async getProfile(userId) {
     return profiles.get(userId) ?? null;

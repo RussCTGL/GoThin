@@ -76,6 +76,7 @@ export interface Store {
 
   addMeal(m: Omit<Meal, "id">): Promise<Meal>;
   listMeals(userId: string, limit?: number): Promise<Meal[]>; // newest first
+  deleteMeal(userId: string, id: string): Promise<void>; // scoped to the owner
 
   getProfile(userId: string): Promise<Profile | null>;
   upsertProfile(p: Profile): Promise<Profile>;
