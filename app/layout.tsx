@@ -1,11 +1,26 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
+import { Inter, Sora } from "next/font/google";
 import { adminEmails, authEnabled, getUser } from "@/lib/auth/user";
+import SiteNav from "./nav";
 import "./globals.css";
 
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+  display: "swap",
+});
+const sora = Sora({
+  subsets: ["latin"],
+  weight: ["600", "700", "800"],
+  variable: "--font-sora",
+  display: "swap",
+});
+
 export const metadata: Metadata = {
-  title: "AI Fitness Coach",
-  description: "Log meals and weight, get daily AI coaching.",
+  title: "GoThin — AI Fitness Coach",
+  description:
+    "Log meals and weight in plain English. Get calorie estimates and direct, no-shame AI coaching.",
 };
 
 export default async function RootLayout({
@@ -19,40 +34,16 @@ export default async function RootLayout({
     !!user?.email && adminEmails().includes(user.email.toLowerCase());
 
   return (
-    <html lang="en">
+    <html lang="en" className={`${inter.variable} ${sora.variable}`}>
       <body>
-        <header className="nav">
-          <a href="/" className="brand">
-            AI Fitness Coach
-          </a>
-          <nav className="nav-links">
-            <a href="/meal">Log Meal</a>
-            <a href="/coach">Coach</a>
-            <a href="/dashboard">Dashboard</a>
-            <a href="/profile">Profile</a>
-            {isAdminUser && <a href="/admin">Admin</a>}
-            {showAuth &&
-              (user ? (
-                <>
-                  <span
-                    className="muted"
-                    style={{ fontSize: "0.85rem" }}
-                    title={user.email ?? ""}
-                  >
-                    {user.email}
-                  </span>
-                  <form action="/auth/signout" method="post" className="inline">
-                    <button type="submit" className="linkbtn">
-                      Sign out
-                    </button>
-                  </form>
-                </>
-              ) : (
-                <a href="/login">Login</a>
-              ))}
-          </nav>
-        </header>
-        <main className="container">{children}</main>
+        <SiteNav
+          showAuth={showAuth}
+          isAdmin={isAdminUser}
+          email={user?.email ?? null}
+        />
+        <main className="mx-auto w-full max-w-5xl px-5 pb-24 pt-8 md:pt-10">
+          {children}
+        </main>
       </body>
     </html>
   );

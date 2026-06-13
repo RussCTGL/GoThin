@@ -23,36 +23,27 @@ export default async function AdminPage() {
 
   return (
     <section>
-      <h1>Admin · all usage</h1>
-      <p className="muted">System-wide AI usage across every account.</p>
+      <h1 className="text-3xl font-bold md:text-4xl">Admin · all usage</h1>
+      <p className="mt-1 text-muted">System-wide AI usage across every account.</p>
 
-      <div className="stats">
-        <div className="stat">
-          <div className="v">${totalCost.toFixed(4)}</div>
-          <div className="k">total spend (last 500)</div>
-        </div>
-        <div className="stat">
-          <div className="v">{usage.length}</div>
-          <div className="k">calls</div>
-        </div>
-        <div className="stat">
-          <div className="v">{byUser.size}</div>
-          <div className="k">users</div>
-        </div>
+      <div className="mt-6 grid gap-4 sm:grid-cols-3">
+        <StatCard label="Total spend (last 500)" value={`$${totalCost.toFixed(4)}`} />
+        <StatCard label="Calls" value={`${usage.length}`} />
+        <StatCard label="Users" value={`${byUser.size}`} />
       </div>
 
-      <h2 className="section-title">By user</h2>
-      <div className="panel">
+      <h2 className="mb-3 mt-10 font-display text-sm font-semibold uppercase tracking-wider text-muted">
+        By user
+      </h2>
+      <div className="card p-5">
         {users.length === 0 ? (
-          <p className="muted" style={{ margin: 0 }}>No usage yet.</p>
+          <p className="text-sm text-muted">No usage yet.</p>
         ) : (
-          <ul className="log">
+          <ul className="divide-y divide-border">
             {users.map(([uid, e]) => (
-              <li key={uid}>
-                <span style={{ fontFamily: "monospace", fontSize: "0.85rem" }}>
-                  {uid}
-                </span>
-                <span className="muted">
+              <li key={uid} className="flex items-center justify-between gap-3 py-2.5 text-sm">
+                <span className="truncate font-mono text-xs text-muted">{uid}</span>
+                <span className="whitespace-nowrap text-muted">
                   {e.count} calls · ${e.cost.toFixed(4)}
                 </span>
               </li>
@@ -61,16 +52,18 @@ export default async function AdminPage() {
         )}
       </div>
 
-      <h2 className="section-title">Recent calls</h2>
-      <div className="panel">
-        <ul className="log">
+      <h2 className="mb-3 mt-10 font-display text-sm font-semibold uppercase tracking-wider text-muted">
+        Recent calls
+      </h2>
+      <div className="card p-5">
+        <ul className="divide-y divide-border">
           {usage.slice(0, 50).map((u) => (
-            <li key={u.id}>
-              <span>
-                {u.feature}{" "}
+            <li key={u.id} className="flex items-center justify-between gap-3 py-2.5 text-sm">
+              <span className="flex items-center gap-2">
+                {u.feature}
                 <span className="badge">{u.model.replace("claude-", "")}</span>
               </span>
-              <span className="muted">
+              <span className="text-right text-xs text-muted">
                 {(u.userId || "(none)").slice(0, 8)} · ${u.costUsd.toFixed(4)} ·{" "}
                 {u.latencyMs}ms
                 {u.cacheReadTokens > 0 ? ` · cache ${u.cacheReadTokens}` : ""}
@@ -80,5 +73,14 @@ export default async function AdminPage() {
         </ul>
       </div>
     </section>
+  );
+}
+
+function StatCard({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="card p-5 text-center">
+      <div className="font-display text-3xl font-extrabold">{value}</div>
+      <div className="mt-1 text-xs font-medium uppercase tracking-wide text-muted">{label}</div>
+    </div>
   );
 }

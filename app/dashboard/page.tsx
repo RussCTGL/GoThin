@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { db } from "@/lib/db";
 import { getUserId } from "@/lib/auth/user";
 import { buildCoachContext } from "@/lib/coach-context";
@@ -10,6 +11,11 @@ import LocalTime from "./local-time";
 export const dynamic = "force-dynamic";
 
 const DAY = 86_400_000;
+
+function pct(n: number, d: number) {
+  if (!d) return 0;
+  return Math.min(Math.round((n / d) * 100), 100);
+}
 
 export default async function Dashboard() {
   const userId = await getUserId();
@@ -25,10 +31,7 @@ export default async function Dashboard() {
     ? last7.reduce((s, w) => s + w.weightKg, 0) / last7.length
     : null;
 
-  // Trend + goal-date projection from the weigh-ins.
   const { trendKgPerWeek, goalDate } = projectGoalDate(weights, ctx.goalWeightKg);
-  // Chart wants oldest → newest. Pass raw ISO; the (client) chart formats the
-  // date labels in the viewer's timezone.
   const chartData = [...weights]
     .sort((a, b) => Date.parse(a.loggedAt) - Date.parse(b.loggedAt))
     .map((w) => ({ iso: w.loggedAt, weight: w.weightKg }));
@@ -39,57 +42,72 @@ export default async function Dashboard() {
     ? Math.round(ttfts.reduce((s, t) => s + t, 0) / ttfts.length)
     : null;
 
+  const calLeft = Math.max(ctx.targetCalories - ctx.caloriesToday, 0);
+
   return (
     <section>
       <MidnightRefresher />
-      <h1>Dashboard</h1>
 
-      <h2 className="section-title">Today</h2>
-      <div className="stats">
-        <div className="stat">
-          <div className="v">
-            {ctx.caloriesToday}
-            <span className="muted"> / {ctx.targetCalories}</span>
-          </div>
-          <div className="k">calories</div>
+      <div className="mb-8 flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="text-3xl font-bold md:text-4xl">Dashboard</h1>
+          <p className="mt-1 text-muted">Here&apos;s where you stand today.</p>
         </div>
-        <div className="stat">
-          <div className="v">
-            {ctx.proteinToday}
-            <span className="muted"> / {ctx.targetProtein} g</span>
-          </div>
-          <div className="k">protein</div>
-        </div>
-        <div className="stat">
-          <div className="v">
-            {Math.max(ctx.targetCalories - ctx.caloriesToday, 0)}
-          </div>
-          <div className="k">kcal left</div>
-        </div>
-      </div>
-      <p className="muted" style={{ marginTop: "0.5rem" }}>
-        <a href="/meal">Log a meal</a> · <a href="/profile">Edit targets</a>
-      </p>
-
-      <h2 className="section-title">Weight</h2>
-      <div className="stats">
-        <div className="stat">
-          <div className="v">{latest ? `${latest.weightKg} kg` : "—"}</div>
-          <div className="k">current</div>
-        </div>
-        <div className="stat">
-          <div className="v">{avg7 != null ? `${avg7.toFixed(1)} kg` : "—"}</div>
-          <div className="k">7-day avg</div>
-        </div>
-        <div className="stat">
-          <div className="v">{ctx.goalWeightKg ?? "—"}</div>
-          <div className="k">goal</div>
+        <div className="flex gap-2">
+          <Link href="/meal" className="btn btn-primary !px-4 !py-2 text-sm">
+            Log a meal
+          </Link>
+          <Link href="/profile" className="btn btn-ghost !px-4 !py-2 text-sm">
+            Edit targets
+          </Link>
         </div>
       </div>
 
-      <div className="panel">
+      {/* Today */}
+      <h2 className="mb-3 font-display text-sm font-semibold uppercase tracking-wider text-muted">
+        Today
+      </h2>
+      <div className="grid gap-4 md:grid-cols-3">
+        <ProgressCard
+          label="Calories"
+          value={ctx.caloriesToday}
+          target={ctx.targetCalories}
+          unit="kcal"
+          from="from-lime-400"
+          to="to-emerald-500"
+        />
+        <ProgressCard
+          label="Protein"
+          value={ctx.proteinToday}
+          target={ctx.targetProtein}
+          unit="g"
+          from="from-cyan-400"
+          to="to-emerald-500"
+        />
+        <div className="card flex flex-col justify-center p-5">
+          <div className="text-xs font-medium uppercase tracking-wide text-muted">
+            Calories left
+          </div>
+          <div className="mt-2 gradient-text font-display text-4xl font-extrabold">
+            {calLeft}
+          </div>
+          <div className="mt-1 text-sm text-muted">to hit your target</div>
+        </div>
+      </div>
+
+      {/* Weight */}
+      <h2 className="mb-3 mt-10 font-display text-sm font-semibold uppercase tracking-wider text-muted">
+        Weight
+      </h2>
+      <div className="grid gap-4 sm:grid-cols-3">
+        <StatCard label="Current" value={latest ? `${latest.weightKg}` : "—"} unit={latest ? "kg" : ""} />
+        <StatCard label="7-day avg" value={avg7 != null ? avg7.toFixed(1) : "—"} unit={avg7 != null ? "kg" : ""} />
+        <StatCard label="Goal" value={ctx.goalWeightKg != null ? `${ctx.goalWeightKg}` : "—"} unit={ctx.goalWeightKg != null ? "kg" : ""} />
+      </div>
+
+      <div className="card mt-4 p-5">
         <WeightChart data={chartData} goal={ctx.goalWeightKg} />
-        <p className="muted" style={{ marginBottom: 0 }}>
+        <p className="mt-3 text-sm text-muted">
           {trendKgPerWeek != null
             ? `Trend: ${trendKgPerWeek > 0 ? "+" : ""}${trendKgPerWeek} kg/week`
             : "Trend: need more weigh-ins"}
@@ -97,14 +115,15 @@ export default async function Dashboard() {
         </p>
       </div>
 
-      <div className="panel">
+      <div className="card mt-4 p-5">
+        <h3 className="mb-3 font-display text-base font-semibold">Log a weigh-in</h3>
         <WeightForm />
         {weights.length > 0 && (
-          <ul className="log">
+          <ul className="mt-4 divide-y divide-border">
             {weights.slice(0, 8).map((w) => (
-              <li key={w.id}>
-                <span>{w.weightKg} kg</span>
-                <span className="muted">
+              <li key={w.id} className="flex items-center justify-between py-2.5 text-sm">
+                <span className="font-medium">{w.weightKg} kg</span>
+                <span className="text-muted">
                   <LocalTime iso={w.loggedAt} />
                 </span>
               </li>
@@ -113,36 +132,28 @@ export default async function Dashboard() {
         )}
       </div>
 
-      <h2 className="section-title">AI efficiency</h2>
-      <div className="stats">
-        <div className="stat">
-          <div className="v">${totalCost.toFixed(4)}</div>
-          <div className="k">spend (last 20)</div>
-        </div>
-        <div className="stat">
-          <div className="v">{avgTtft != null ? `${avgTtft} ms` : "—"}</div>
-          <div className="k">avg TTFT</div>
-        </div>
-        <div className="stat">
-          <div className="v">{usage.length}</div>
-          <div className="k">calls</div>
-        </div>
+      {/* AI efficiency */}
+      <h2 className="mb-3 mt-10 font-display text-sm font-semibold uppercase tracking-wider text-muted">
+        AI efficiency
+      </h2>
+      <div className="grid gap-4 sm:grid-cols-3">
+        <StatCard label="Spend (last 20)" value={`$${totalCost.toFixed(4)}`} />
+        <StatCard label="Avg TTFT" value={avgTtft != null ? `${avgTtft}` : "—"} unit={avgTtft != null ? "ms" : ""} />
+        <StatCard label="Calls" value={`${usage.length}`} />
       </div>
 
-      <div className="panel">
+      <div className="card mt-4 p-5">
         {usage.length === 0 ? (
-          <p className="muted" style={{ margin: 0 }}>
-            No AI calls yet — try the meal logger or coach.
-          </p>
+          <p className="text-sm text-muted">No AI calls yet — try the meal logger or coach.</p>
         ) : (
-          <ul className="log">
+          <ul className="divide-y divide-border">
             {usage.map((u) => (
-              <li key={u.id}>
-                <span>
-                  {u.feature}{" "}
+              <li key={u.id} className="flex items-center justify-between gap-3 py-2.5 text-sm">
+                <span className="flex items-center gap-2">
+                  {u.feature}
                   <span className="badge">{u.model.replace("claude-", "")}</span>
                 </span>
-                <span className="muted">
+                <span className="text-right text-xs text-muted">
                   ${u.costUsd.toFixed(4)} · {u.latencyMs}ms
                   {u.ttftMs != null ? ` · ttft ${u.ttftMs}ms` : ""}
                   {u.cacheReadTokens > 0 ? ` · cache ${u.cacheReadTokens}` : ""}
@@ -153,5 +164,53 @@ export default async function Dashboard() {
         )}
       </div>
     </section>
+  );
+}
+
+function ProgressCard({
+  label,
+  value,
+  target,
+  unit,
+  from,
+  to,
+}: {
+  label: string;
+  value: number;
+  target: number;
+  unit: string;
+  from: string;
+  to: string;
+}) {
+  const p = pct(value, target);
+  return (
+    <div className="card p-5">
+      <div className="flex items-baseline justify-between">
+        <span className="text-xs font-medium uppercase tracking-wide text-muted">{label}</span>
+        <span className="text-xs text-muted">{p}%</span>
+      </div>
+      <div className="mt-2 font-display text-3xl font-extrabold">
+        {value}
+        <span className="text-lg font-semibold text-muted"> / {target} {unit}</span>
+      </div>
+      <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-surface-2">
+        <div
+          className={`h-full rounded-full bg-gradient-to-r ${from} ${to}`}
+          style={{ width: `${p}%` }}
+        />
+      </div>
+    </div>
+  );
+}
+
+function StatCard({ label, value, unit }: { label: string; value: string; unit?: string }) {
+  return (
+    <div className="card p-5 text-center">
+      <div className="font-display text-3xl font-extrabold">
+        {value}
+        {unit ? <span className="text-lg font-semibold text-muted"> {unit}</span> : null}
+      </div>
+      <div className="mt-1 text-xs font-medium uppercase tracking-wide text-muted">{label}</div>
+    </div>
   );
 }

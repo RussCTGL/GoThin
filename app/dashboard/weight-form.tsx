@@ -27,16 +27,17 @@ export default function WeightForm() {
   }
 
   return (
-    <form onSubmit={submit}>
+    <form onSubmit={submit} className="flex flex-col gap-2 sm:flex-row">
       <input
+        className="input"
         type="text"
         inputMode="decimal"
         value={val}
         onChange={(e) => setVal(e.target.value)}
         placeholder="e.g. 107.4"
       />
-      <button type="submit" disabled={busy}>
-        {busy ? "Saving…" : "Log weight (kg)"}
+      <button type="submit" disabled={busy} className="btn btn-primary whitespace-nowrap">
+        {busy ? "Saving…" : "Log weight"}
       </button>
     </form>
   );

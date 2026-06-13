@@ -68,50 +68,54 @@ export default function ProfileForm({ initial }: { initial: Initial }) {
   }
 
   return (
-    <form onSubmit={submit} className="panel stack">
-      <label className="field">
-        <span>Daily calorie target (kcal)</span>
+    <form onSubmit={submit} className="card mt-6 flex flex-col gap-4 p-6">
+      <label className="flex flex-col gap-1.5">
+        <span className="text-xs font-medium text-muted">Daily calorie target (kcal)</span>
         <input
+          className="input"
           type="number"
           value={targetCalories}
           onChange={(e) => setTargetCalories(e.target.value)}
         />
       </label>
-      <label className="field">
-        <span>Daily protein target (g)</span>
+      <label className="flex flex-col gap-1.5">
+        <span className="text-xs font-medium text-muted">Daily protein target (g)</span>
         <input
+          className="input"
           type="number"
           value={targetProteinG}
           onChange={(e) => setTargetProteinG(e.target.value)}
         />
       </label>
-      <label className="field">
-        <span>Goal weight (kg, optional)</span>
+      <label className="flex flex-col gap-1.5">
+        <span className="text-xs font-medium text-muted">Goal weight (kg, optional)</span>
         <input
+          className="input"
           type="number"
           value={goalWeightKg}
           onChange={(e) => setGoalWeightKg(e.target.value)}
           placeholder="e.g. 100"
         />
       </label>
-      <label className="field">
-        <span>Dietary preferences (optional)</span>
+      <label className="flex flex-col gap-1.5">
+        <span className="text-xs font-medium text-muted">Dietary preferences (optional)</span>
         <input
+          className="input"
           type="text"
           value={dietaryPreferences}
           onChange={(e) => setDietaryPreferences(e.target.value)}
           placeholder="e.g. high protein, no pork"
         />
       </label>
-      <p className="muted" style={{ margin: 0, fontSize: "0.85rem" }}>
-        Timezone (auto-detected): <strong>{timezone || "unknown"}</strong> — this
-        sets when your day rolls over.
+      <p className="text-xs text-muted">
+        Timezone (auto-detected): <strong className="text-text">{timezone || "unknown"}</strong> —
+        this sets when your day rolls over.
       </p>
-      <button type="submit" disabled={busy}>
+      <button type="submit" disabled={busy} className="btn btn-primary mt-1">
         {busy ? "Saving…" : "Save targets"}
       </button>
-      {saved && <p className="muted" style={{ margin: 0 }}>Saved ✓</p>}
-      {error && <p className="error" style={{ margin: 0 }}>{error}</p>}
+      {saved && <p className="text-sm text-brand-300">Saved ✓</p>}
+      {error && <p className="text-sm text-coral">{error}</p>}
     </form>
   );
 }

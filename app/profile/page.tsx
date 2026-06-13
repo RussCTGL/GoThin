@@ -9,9 +9,9 @@ export default async function ProfilePage() {
   const profile = await db.getProfile(userId);
 
   return (
-    <section>
-      <h1>Profile &amp; targets</h1>
-      <p className="muted">
+    <section className="mx-auto max-w-xl">
+      <h1 className="text-3xl font-bold md:text-4xl">Profile &amp; targets</h1>
+      <p className="mt-1 text-muted">
         These targets drive your dashboard and what the coach reasons about.
       </p>
       <ProfileForm

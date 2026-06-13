@@ -22,7 +22,7 @@ export default function WeightChart({
 }) {
   if (data.length < 2) {
     return (
-      <p className="muted" style={{ margin: 0 }}>
+      <p className="text-sm text-muted">
         Log at least two weigh-ins to see your trend.
       </p>
     );
@@ -41,25 +41,32 @@ export default function WeightChart({
     <div style={{ width: "100%", height: 240 }}>
       <ResponsiveContainer>
         <LineChart data={points} margin={{ top: 8, right: 12, bottom: 0, left: -18 }}>
-          <CartesianGrid stroke="#262b36" strokeDasharray="3 3" />
-          <XAxis dataKey="date" stroke="#9aa3b2" fontSize={12} tickMargin={8} />
-          <YAxis stroke="#9aa3b2" fontSize={12} domain={["auto", "auto"]} />
+          <defs>
+            <linearGradient id="weightStroke" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0%" stopColor="#a3e635" />
+              <stop offset="100%" stopColor="#34d399" />
+            </linearGradient>
+          </defs>
+          <CartesianGrid stroke="#242836" strokeDasharray="3 3" />
+          <XAxis dataKey="date" stroke="#98a1b5" fontSize={12} tickMargin={8} />
+          <YAxis stroke="#98a1b5" fontSize={12} domain={["auto", "auto"]} />
           <Tooltip
+            cursor={{ stroke: "#333950" }}
             contentStyle={{
-              background: "#171a21",
-              border: "1px solid #262b36",
-              borderRadius: 8,
-              color: "#e6e8ec",
+              background: "#12141c",
+              border: "1px solid #242836",
+              borderRadius: 10,
+              color: "#f2f4f8",
             }}
           />
           {goal != null && (
             <ReferenceLine
               y={goal}
-              stroke="#4ade80"
+              stroke="#34d399"
               strokeDasharray="4 4"
               label={{
                 value: `goal ${goal}`,
-                fill: "#4ade80",
+                fill: "#34d399",
                 fontSize: 11,
                 position: "insideTopLeft",
               }}
@@ -68,9 +75,10 @@ export default function WeightChart({
           <Line
             type="monotone"
             dataKey="weight"
-            stroke="#4ade80"
-            strokeWidth={2}
-            dot={{ r: 3 }}
+            stroke="url(#weightStroke)"
+            strokeWidth={3}
+            dot={{ r: 3, fill: "#a3e635", strokeWidth: 0 }}
+            activeDot={{ r: 5, fill: "#34d399", strokeWidth: 0 }}
           />
         </LineChart>
       </ResponsiveContainer>
