@@ -122,9 +122,11 @@ export function parseMeal(
 }
 
 /**
- * Estimate macros from a food photo. Uses the stronger vision model with
- * adaptive thinking and an itemized, portion-aware prompt — photo estimation is
- * the hard case, so we trade cost/latency for accuracy here.
+ * Estimate macros from a food photo. Uses the stronger vision model with an
+ * itemized, portion-aware prompt for accuracy. Adaptive thinking is left OFF
+ * here: on Sonnet it pushed photo analysis to ~60s (well past a usable logging
+ * UX), and the model + itemization + prompt already lift accuracy a lot without
+ * it. (Flip the last arg to re-enable thinking if latency stops mattering.)
  */
 export function parseMealImage(
   imageBase64: string,
@@ -144,6 +146,6 @@ export function parseMealImage(
     ],
     userId,
     traceId,
-    true,
+    false,
   );
 }
