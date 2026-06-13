@@ -44,15 +44,26 @@
 
   body {
     margin: 0;
-    background:
-      radial-gradient(1100px 600px at 85% -10%, rgba(132, 204, 22, 0.10), transparent 60%),
-      radial-gradient(900px 500px at 5% 0%, rgba(52, 211, 153, 0.08), transparent 55%),
-      var(--color-bg);
+    background: var(--color-bg);
     color: var(--color-text);
     font-family: var(--font-sans);
     line-height: 1.55;
     -webkit-font-smoothing: antialiased;
     min-height: 100dvh;
+  }
+
+  /* Ambient brand glow — fixed to the viewport so it covers the whole
+     screen at every scroll position, behind all content. */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background:
+      radial-gradient(900px 600px at 85% -5%, rgba(132, 204, 22, 0.12), transparent 60%),
+      radial-gradient(800px 600px at 5% 5%, rgba(52, 211, 153, 0.10), transparent 55%),
+      radial-gradient(700px 600px at 50% 110%, rgba(34, 211, 238, 0.07), transparent 60%);
   }
 
   a {
