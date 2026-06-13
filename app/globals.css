@@ -52,10 +52,9 @@
     min-height: 100dvh;
   }
 
-  /* Ambient brand wash — fixed to the viewport so it covers the whole
-     screen evenly at every scroll position, behind all content. A single
-     diagonal gradient with no transparent stops, so there's no visible
-     edge or transition anywhere on the page. */
+  /* Ambient brand wash — fixed to the viewport, behind all content.
+     The tint is anchored at the left and right edges and fades toward a
+     neutral center, so there's no stand-alone band in the middle. */
   body::before {
     content: "";
     position: fixed;
@@ -63,10 +62,13 @@
     z-index: -1;
     pointer-events: none;
     background: linear-gradient(
-      160deg,
-      rgba(132, 204, 22, 0.1) 0%,
-      rgba(52, 211, 153, 0.05) 45%,
-      rgba(34, 211, 238, 0.06) 100%
+      90deg,
+      rgba(132, 204, 22, 0.12) 0%,
+      rgba(52, 211, 153, 0.05) 22%,
+      transparent 45%,
+      transparent 55%,
+      rgba(52, 211, 153, 0.05) 78%,
+      rgba(34, 211, 238, 0.11) 100%
     );
   }
 
