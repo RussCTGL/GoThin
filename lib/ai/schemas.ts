@@ -6,9 +6,15 @@ import { z } from "zod";
  * string we have to hope is JSON. This is the single biggest reliability win.
  */
 export const MealEstimate = z.object({
+  // Per-item breakdown. Estimating each food separately then summing is far
+  // more accurate than one lump guess — especially for photos.
   items: z.array(
     z.object({
       name: z.string(),
+      calories: z.number(),
+      protein_g: z.number(),
+      carbs_g: z.number(),
+      fat_g: z.number(),
     }),
   ),
   calories: z.number(),
@@ -34,8 +40,14 @@ export const MEAL_JSON_SCHEMA = {
       type: "array",
       items: {
         type: "object",
-        properties: { name: { type: "string" } },
-        required: ["name"],
+        properties: {
+          name: { type: "string" },
+          calories: { type: "number" },
+          protein_g: { type: "number" },
+          carbs_g: { type: "number" },
+          fat_g: { type: "number" },
+        },
+        required: ["name", "calories", "protein_g", "carbs_g", "fat_g"],
         additionalProperties: false,
       },
     },

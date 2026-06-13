@@ -23,6 +23,7 @@ export const anthropic = new Anthropic({
  */
 export const MODELS = {
   parse: "claude-haiku-4-5", // meal text parsing, classification
+  vision: "claude-sonnet-4-6", // food-photo estimation — accuracy over cost
   coach: "claude-sonnet-4-6", // daily coaching, coach chat
 } as const;
 

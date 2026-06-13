@@ -24,7 +24,7 @@ const CONFIDENCE_STYLE: Record<Estimate["confidence"], string> = {
 // tokens, faster round-trip. Returns raw base64 (no data: prefix) + media type.
 async function downscale(
   file: File,
-  maxDim = 1024,
+  maxDim = 1536,
 ): Promise<{ base64: string; mediaType: "image/jpeg" }> {
   const dataUrl = await new Promise<string>((resolve, reject) => {
     const r = new FileReader();
@@ -43,7 +43,7 @@ async function downscale(
   canvas.width = Math.round(img.width * scale);
   canvas.height = Math.round(img.height * scale);
   canvas.getContext("2d")!.drawImage(img, 0, 0, canvas.width, canvas.height);
-  const jpeg = canvas.toDataURL("image/jpeg", 0.82);
+  const jpeg = canvas.toDataURL("image/jpeg", 0.85);
   return { base64: jpeg.split(",")[1], mediaType: "image/jpeg" };
 }
 

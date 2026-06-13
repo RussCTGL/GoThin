@@ -20,13 +20,24 @@ export type ImageMediaType =
   | "image/webp";
 
 const SYSTEM =
-  "You estimate nutrition from a meal. Return JSON only. " +
-  "If uncertain, lower the confidence — never claim medical certainty.";
+  "You are a careful nutrition estimator. Identify each food in the meal, " +
+  "estimate each item's portion and macros separately, then sum them for the " +
+  "totals. Prefer realistic numbers over round ones, and account for cooking " +
+  "oils, sauces, and dressings — they're easy to miss. Return JSON only. If a " +
+  "portion or identity is uncertain, lower the confidence; never claim medical " +
+  "certainty.";
 
 const IMAGE_PROMPT =
-  "Identify the foods in this photo and estimate the total calories, protein, " +
-  "carbs, and fat for the whole meal. Portion sizes are approximate, so reflect " +
-  "that in the confidence level.";
+  "Estimate the nutrition of this meal from the photo. List every distinct food " +
+  "and drink you can see. For each one, judge the portion size using visual " +
+  "reference cues — plate/bowl/utensil size, packaging, or a hand — then give " +
+  "its calories, protein, carbs, and fat. Sum the items for the totals.";
+
+// Adaptive thinking and structured outputs are only worth enabling on the
+// stronger models; Haiku doesn't support adaptive thinking.
+function supportsThinking(model: string) {
+  return model.startsWith("claude-sonnet") || model.startsWith("claude-opus");
+}
 
 /**
  * Shared estimator. Both the text and image paths build a `content` payload and
@@ -36,21 +47,29 @@ const IMAGE_PROMPT =
  *  - model fallback on 429/5xx/529 → degrade the model, not the feature
  *  - typed `ParseResult` → callers must handle the unavailable case
  *  - 4xx (our bug) still throws → caught in dev, not silently masked
+ *
+ * `think` turns on adaptive thinking on capable models — meaningfully better
+ * portion reasoning for photos, at some extra latency/cost.
  */
 async function estimate(
   feature: string,
+  primaryModel: string,
   content: Anthropic.MessageParam["content"],
   userId: string,
   traceId: string,
+  think: boolean,
 ): Promise<ParseResult> {
-  for (const model of withFallback(MODELS.parse)) {
+  for (const model of withFallback(primaryModel)) {
     const t0 = performance.now();
+    const thinking = think && supportsThinking(model);
     try {
       const res = await anthropic.messages.create({
         model,
-        max_tokens: 1024,
+        // Leave headroom for thinking tokens + the itemized JSON.
+        max_tokens: thinking ? 2560 : 1024,
         system: SYSTEM,
         messages: [{ role: "user", content }],
+        ...(thinking ? { thinking: { type: "adaptive" as const } } : {}),
         output_config: {
           format: { type: "json_schema", schema: MEAL_JSON_SCHEMA },
         },
@@ -91,23 +110,21 @@ async function estimate(
 }
 
 /**
- * Parse a free-text meal into validated macros.
- *
- * Pass a `traceId` to correlate this call with the rest of one user interaction;
- * omit it and one is generated. The id is returned so callers can thread it on.
+ * Parse a free-text meal into validated macros. Text is easy, so this stays on
+ * the cheap/fast model with no thinking.
  */
 export function parseMeal(
   text: string,
   userId: string,
   traceId: string = newTraceId(),
 ): Promise<ParseResult> {
-  return estimate("meal.parse", text, userId, traceId);
+  return estimate("meal.parse", MODELS.parse, text, userId, traceId, false);
 }
 
 /**
- * Estimate macros from a food photo. `imageBase64` is the raw base64 (no data:
- * URL prefix). Uses the same vision-capable parse model and structured output
- * as the text path, so the result shape and reliability guarantees are identical.
+ * Estimate macros from a food photo. Uses the stronger vision model with
+ * adaptive thinking and an itemized, portion-aware prompt — photo estimation is
+ * the hard case, so we trade cost/latency for accuracy here.
  */
 export function parseMealImage(
   imageBase64: string,
@@ -117,6 +134,7 @@ export function parseMealImage(
 ): Promise<ParseResult> {
   return estimate(
     "meal.image",
+    MODELS.vision,
     [
       {
         type: "image",
@@ -126,5 +144,6 @@ export function parseMealImage(
     ],
     userId,
     traceId,
+    true,
   );
 }
